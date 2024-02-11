@@ -14,7 +14,7 @@ resource "aws_vpc" "mtc_vpc" {
   enable_dns_support   = true
 
   tags = {
-    Name = "mtc_vpc-${random_integer.random.id}"
+    Name = "mtc_vpc-${random_id.random.id}"
   }
   lifecycle {
     create_before_destroy = true
@@ -77,6 +77,7 @@ resource "aws_subnet" "mtc_private_subnet" {
 
 resource "aws_route_table_association" "mtc_public_assoc" {
   count          = length(local.azs)
-  subnet_id      = aws_subnet.mtc_public_subnet.*.id[count.index]
+#  subnet_id      = aws_subnet.mtc_public_subnet.*.id[count.index]
+  subnet_id      = aws_subnet.mtc_public_subnet[count.index].id
   route_table_id = aws_route_table.mtc_public_rt.id
 }

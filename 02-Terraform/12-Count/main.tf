@@ -10,7 +10,7 @@ resource "aws_vpc" "mtc_vpc" {
   enable_dns_support   = true
 
   tags = {
-    Name = "mtc_vpc-${random_integer.random.id}"
+    Name = "mtc_vpc-${random_id.random.id}"
   }
   lifecycle {
     create_before_destroy = true
@@ -52,9 +52,21 @@ resource "aws_subnet" "mtc_public_subnet" {
   vpc_id                  = aws_vpc.mtc_vpc.id
   cidr_block              = var.public_cidrs[count.index]
   map_public_ip_on_launch = true
-  availability_zone       = data.aws_availablity_zones.available.names[count.index]
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
 
   tags = {
     Name = "mtc_public_${count.index + 1}"
+  }
+}
+
+resource "aws_subnet" "mtc_private_subnet" {
+  count                   = length(var.private_cidrs)
+  vpc_id                  = aws_vpc.mtc_vpc.id
+  cidr_block              = var.private_cidrs[count.index]
+  map_public_ip_on_launch = false
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    Name = "mtc_private_${count.index + 1}"
   }
 }

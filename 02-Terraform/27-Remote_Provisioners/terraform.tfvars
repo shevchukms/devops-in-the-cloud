@@ -1,3 +1,3 @@
-vpc_cidr = "10.123.0.0/16"
+vpc_cidr        = "10.123.0.0/16"
 key_name        = "mtc_key"
-public_key_path = "/home/ubuntu/.ssh/mtckey.pub"
+public_key_path = "/Users/mshevchuk/.ssh/mtckey.pub"

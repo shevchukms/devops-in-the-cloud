@@ -35,3 +35,8 @@ variable "key_name" {
 variable "public_key_path" {
   type = string
 }
+
+variable "access_ip" {
+  type    = string
+  default = "92.253.236.32/32"
+}

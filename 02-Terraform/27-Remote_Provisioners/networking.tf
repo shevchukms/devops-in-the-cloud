@@ -14,7 +14,7 @@ resource "aws_vpc" "mtc_vpc" {
   enable_dns_support   = true
 
   tags = {
-    Name = "mtc_vpc-${random_integer.random.id}"
+    Name = "mtc_vpc-${random_id.random.id}"
   }
   lifecycle {
     create_before_destroy = true
@@ -92,7 +92,7 @@ resource "aws_security_group_rule" "ingress_all" {
   from_port         = 0
   to_port           = 65535
   protocol          = "-1"
-  cidr_blocks       = [var.access_ip, var.cloud9_ip]
+  cidr_blocks       = [var.access_ip]
   security_group_id = aws_security_group.mtc_sg.id
 }
 

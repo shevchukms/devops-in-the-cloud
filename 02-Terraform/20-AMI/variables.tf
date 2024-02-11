@@ -3,12 +3,7 @@ variable "vpc_cidr" {
   default = "10.123.0.0/16"
 }
 
-variable "public_cidrs" {
-  type    = list(string)
-  default = ["10.123.1.0/24", "10.123.3.0/24"]
-}
-
-variable "private_cidrs" {
-  type    = list(string)
-  default = ["10.123.2.0/24", "10.123.4.0/24"]
+variable "access_ip" {
+  type = string
+  default = "92.253.236.0/22"
 }

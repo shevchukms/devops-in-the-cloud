@@ -1,9 +1,9 @@
 terraform {
   backend "remote" {
-    organization = "org-name-here"
+    organization = "terrancible"
 
     workspaces {
-      name = "mtc-terransible"
+      name = "terransible"
     }
   }
 }

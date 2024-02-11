@@ -5,7 +5,7 @@ data "aws_ami" "server_ami" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
 }
 
@@ -14,6 +14,10 @@ resource "random_id" "mtc_node_id" {
   count       = var.main_instance_count
 }
 
+resource "aws_key_pair" "mtc_auth" {
+  key_name = var.key_name
+  public_key = file(var.public_key_path)
+}
 
 resource "aws_instance" "mtc_main" {
   count         = var.main_instance_count
@@ -31,5 +35,12 @@ resource "aws_instance" "mtc_main" {
 
   root_block_device {
     volume_size = var.main_vol_size
+  }
+  provisioner "local-exec" {
+    command = "printf '\n${self.public_ip}' >> aws_hosts"
+  }
+  provisioner "local-exec" {
+    when = destroy
+    command = "sed -i '' '/^[0-9]/d' aws_hosts"
   }
 }

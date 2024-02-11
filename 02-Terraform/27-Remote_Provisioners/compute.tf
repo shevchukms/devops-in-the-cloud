@@ -14,6 +14,10 @@ resource "random_id" "mtc_node_id" {
   count       = var.main_instance_count
 }
 
+resource "aws_key_pair" "mtc_auth" {
+  key_name   = var.key_name
+  public_key = file(var.public_key_path)
+}
 
 resource "aws_instance" "mtc_main" {
   count                  = var.main_instance_count
@@ -22,7 +26,7 @@ resource "aws_instance" "mtc_main" {
   key_name               = aws_key_pair.mtc_auth.id
   vpc_security_group_ids = [aws_security_group.mtc_sg.id]
   subnet_id              = aws_subnet.mtc_public_subnet[count.index].id
-  user_data = templatefile("./main-userdata.tpl", {new_hostname = "mtc-main-${random_id.mtc_node_id[count.index].dec}"})
+  user_data              = templatefile("./main-userdata.tpl", { new_hostname = "mtc-main-${random_id.mtc_node_id[count.index].dec}" })
   root_block_device {
     volume_size = var.main_vol_size
   }
@@ -35,7 +39,7 @@ resource "aws_instance" "mtc_main" {
   }
   provisioner "local-exec" {
     when    = destroy
-    command = "sed -i '/^[0-9]/d' aws_hosts"
+    command = "sed -i '' '/^[0-9]/d' aws_hosts"
   }
 }
 
@@ -47,7 +51,7 @@ resource "null_resource" "grafana_update" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = file("/home/ubuntu/.ssh/mtckey")
+      private_key = file("/Users/mshevchuk/.ssh/mtckey")
       host        = aws_instance.mtc_main[count.index].public_ip
     }
   }

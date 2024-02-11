@@ -31,3 +31,13 @@ variable "main_instance_count" {
 variable "key_name" {
   type = string
 }
+
+
+variable "public_key_path" {
+  type = string
+}
+
+variable "access_ip" {
+  type = string
+  default = "92.253.236.190/32"
+}

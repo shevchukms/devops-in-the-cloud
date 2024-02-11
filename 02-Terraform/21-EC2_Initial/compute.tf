@@ -5,11 +5,12 @@ data "aws_ami" "server_ami" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
 }
 
 resource "aws_instance" "mtc_main" {
+  count = length(aws_subnet.mtc_public_subnet)
   instance_type = var.main_instance_type
   ami           = data.aws_ami.server_ami.id
 
@@ -17,7 +18,7 @@ resource "aws_instance" "mtc_main" {
     Name = "mtc_main"
   }
 
-  # key_name               = ""
+#  key_name               = "mtc_main_${count.index}"
   vpc_security_group_ids = [aws_security_group.mtc_sg.id]
   subnet_id              = aws_subnet.mtc_public_subnet[count.index].id
 

@@ -14,7 +14,7 @@ resource "aws_vpc" "mtc_vpc" {
   enable_dns_support   = true
 
   tags = {
-    Name = "mtc_vpc-${random_integer.random.id}"
+    Name = "mtc_vpc-${random_id.random.id}"
   }
   lifecycle {
     create_before_destroy = true
