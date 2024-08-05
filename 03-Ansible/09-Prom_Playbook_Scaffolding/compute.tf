@@ -65,6 +65,13 @@ resource "null_resource" "grafana_install" {
   }
 }
 
+resource "null_resource" "jenkins_install" {
+  depends_on = [aws_instance.mtc_main]
+  provisioner "local-exec" {
+    command = "ansible-playbook -i aws_hosts --key-file /home/ubuntu/.ssh/mtckey playbooks/jenkins.yml"
+  }
+}
+
 output "instance_ips" {
   value = { for i in aws_instance.mtc_main[*] : i.tags.Name => "${i.public_ip}:3000" }
 }

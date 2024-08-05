@@ -5,7 +5,7 @@ data "aws_ami" "server_ami" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
 }
 
@@ -14,44 +14,72 @@ resource "random_id" "mtc_node_id" {
   count       = var.main_instance_count
 }
 
+resource "aws_key_pair" "mtc_auth" {
+  key_name = var.key_name
+  public_key = file(var.public_key_path)
+}
 
 resource "aws_instance" "mtc_main" {
-  count                  = var.main_instance_count
-  instance_type          = var.main_instance_type
-  ami                    = data.aws_ami.server_ami.id
-  key_name               = aws_key_pair.mtc_auth.id
-  vpc_security_group_ids = [aws_security_group.mtc_sg.id]
-  subnet_id              = aws_subnet.mtc_public_subnet[count.index].id
-  root_block_device {
-    volume_size = var.main_vol_size
-  }
+  count         = var.main_instance_count
+  instance_type = var.main_instance_type
+  ami           = data.aws_ami.server_ami.id
+
   tags = {
     Name = "mtc-main-${random_id.mtc_node_id[count.index].dec}"
   }
 
-  provisioner "local-exec" {
-    command = "printf '\n${self.public_ip}' >> aws_hosts"
+  key_name               = aws_key_pair.mtc_auth.id
+  vpc_security_group_ids = [aws_security_group.mtc_sg.id]
+  subnet_id              = aws_subnet.mtc_public_subnet[count.index].id
+
+  root_block_device {
+    volume_size = var.main_vol_size
   }
   provisioner "local-exec" {
-    when    = destroy
-    command = "sed -i '/^[0-9]/d' aws_hosts"
+    command = "printf '\n${self.public_ip}' >> aws_hosts && aws ec2 wait instance-status-ok --instance-ids '${self.id}' --region us-west-1"
+  }
+  provisioner "local-exec" {
+    when = destroy
+    command = "sed -i '' '/^[0-9]/d' aws_hosts"
   }
 }
 
-# resource "null_resource" "grafana_update" {
-#   count = var.main_instance_count
-#   provisioner "remote-exec" {
-#     inline = ["sudo apt upgrade -y grafana && touch upgrade.log && echo 'I updated Grafana' >> upgrade.log"]
+resource "aws_instance" "jenkins_main" {
+  count         = var.main_instance_count
+  instance_type = var.main_instance_type
+  ami           = data.aws_ami.server_ami.id
 
-#     connection {
-#       type        = "ssh"
-#       user        = "ubuntu"
-#       private_key = file("/home/ubuntu/.ssh/mtckey")
-#       host        = aws_instance.mtc_main[count.index].public_ip
-#     }
-#   }
-# }
+  tags = {
+    Name = "mtc-main_jenkins-${random_id.mtc_node_id[count.index].dec}"
+  }
 
-output "instance_ips" {
-    value = {for i in aws_instance.mtc_main[*] : i.tags.Name => "${i.public_ip}:3000"}
+  key_name               = aws_key_pair.mtc_auth.id
+  vpc_security_group_ids = [aws_security_group.mtc_sg.id]
+  subnet_id              = aws_subnet.mtc_public_subnet[count.index].id
+
+  root_block_device {
+    volume_size = var.main_vol_size
+  }
+  provisioner "local-exec" {
+    command = "printf '\n${self.public_ip}' >> jenkins_aws_hosts && aws ec2 wait instance-status-ok --instance-ids '${self.id}' --region us-west-1"
+  }
+  provisioner "local-exec" {
+    when = destroy
+    command = "sed -i '' '/^[0-9]/d' jenkins_aws_hosts"
+  }
+}
+
+resource "null_resource" "grafana_install" {
+  depends_on = [aws_instance.mtc_main]
+  provisioner "local-exec" {
+    command = "ansible-playbook -i aws_hosts -u ubuntu --key-file /Users/mshevchuk/.ssh/mtckey playbooks/grafana-playbook.yml --limit @/Users/mshevchuk/projects/devops-in-the-cloud/03-Ansible/.ansible_retry/grafana-playbook.retry"
+  }
+}
+
+resource "null_resource" "jenkins_install" {
+  depends_on = [aws_instance.jenkins_main]
+  provisioner "local-exec" {
+    command = "ansible-playbook -i jenkins_aws_hosts -u ubuntu --key-file /Users/mshevchuk/.ssh/mtckey playbooks/jenkins.yml --limit @/Users/mshevchuk/projects/devops-in-the-cloud/03-Ansible/.ansible_retry/jenkins-playbook.retry"
+  }
+
 }

@@ -38,5 +38,5 @@ variable "public_key_path" {
 
 variable "access_ip" {
   type    = string
-  default = "92.253.236.32/32"
+  default = "92.253.212.76/32"
 }

@@ -30,4 +30,16 @@ variable "main_instance_count" {
 
 variable "key_name" {
   type = string
+  default = "mtckey"
+}
+
+
+variable "public_key_path" {
+  type = string
+  default = "/Users/mshevchuk/.ssh/mtckey.pub"
+}
+
+variable "access_ip" {
+  type = string
+  default = "92.253.212.76/32"
 }
